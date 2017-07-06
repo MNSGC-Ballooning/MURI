@@ -37,6 +37,8 @@ const int D2[2] = {8, 9}; //specify input pins for detector 2 (P1, P2)
 //const int D4[2] = {12, 13}; //specify input pins for detector 2 (P1, P2)
 //const int Di[2] = [P1, P2] gives template for an i'th detector using pins P1 and P2
 int pin, n_pulses = 0;
+const int readLED = 4;
+const int logLED 3;
 unsigned long duration, min_duration = 1000000, max_duration = 0;
 unsigned long starttime;
 // unsigned long waittime=500000; // microseconds to wait for pulse to complete before return from pulseIn()
