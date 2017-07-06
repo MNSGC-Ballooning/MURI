@@ -16,6 +16,8 @@
 */
 #define ECHO_TO_FILE 0
 #define ECHO_TO_SERIAL 1
+#define SDError 3
+#define FileError 4
 #include <Wire.h>
 #include "RTClib.h"
 #include <SoftwareSerial.h>
@@ -38,13 +40,14 @@ const int D2[2] = {8, 9}; //specify input pins for detector 2 (P1, P2)
 //const int Di[2] = [P1, P2] gives template for an i'th detector using pins P1 and P2
 int pin, n_pulses = 0;
 const int readLED = 4;
-const int logLED 3;
+const int logLED = 3;
 unsigned long duration, min_duration = 1000000, max_duration = 0;
 unsigned long starttime;
 // unsigned long waittime=500000; // microseconds to wait for pulse to complete before return from pulseIn()
 unsigned long sampletime_ms = 5000; //sample 30 s
 unsigned long lowpulseoccupancy = 0;
 float ratio, concentration;
+int Status = 0;
  
 int increment;
 void setup() {
@@ -60,9 +63,23 @@ void setup() {
   pinMode(D2[0], INPUT); pinMode(D2[1], INPUT);
   //pinMode(D3[0], INPUT); pinMode(D3[1], INPUT);
   //pinMode(D4[0], INPUT); pinMode(D4[1], INPUT);
+  pinMode(readLED, OUTPUT);
+  pinMode(logLED, OUTPUT);
   starttime = millis();//get the current time;
 #if ECHO_TO_FILE
-  SDsetup();
+  Status = SDsetup();
+  if (!Status)
+  {
+    // Long blink the LED to inidicate successful SD initialization
+    for(int i=0; i < 2; i++)
+    {
+      digitalWrite(logLED, HIGH);
+      delay(1000);
+      digitalWrite(logLED, LOW);
+      delay(1000);
+    }
+  }
+  
   logfile.println("ch,Date,Time,pulse_occupancy,avg_duration,min_duration,max_duration, GPS_altitude, GPS_time");
   logfile.flush();
 #endif
@@ -97,6 +114,7 @@ void loop() {
   //readPulses(Di[1];
   //increment ++;
 }
+
 void readPulses(int P) {
  
   pin = P;
@@ -109,6 +127,10 @@ void readPulses(int P) {
       lowpulseoccupancy += duration;
     }
   } while ( (millis() - starttime) < sampletime_ms) ;
+  // Blink the read LED to indicate a pulse read
+  digitalWrite(readLED, HIGH);
+  delay(100);
+  digitalWrite(readLED, LOW);
  
 #if ECHO_TO_SERIAL
   Serial.print("D" + (String)(increment % num_detectors + 1) + "[" + (String)(increment / num_detectors + 1) + "]:, ");
@@ -188,17 +210,20 @@ void DisplayTime(boolean lineFeed) {
   if (lineFeed) Serial.println();
   else Serial.print(", ");
 }
-void SDsetup() {
+
+// Returns the startup status: 0 for success and 1 for failure
+int SDsetup() {
   // initialize the SD card
   Serial.print("Initializing SD card...");
   // make sure that the default chip select pin is set to
   // output, even if you don't use it:
   pinMode(10, OUTPUT);
   // see if the card is present and can be initialized:
-  if (!SD.begin(53)) {
+  if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
-    // don't do anything more:
-    return;
+    // blink log LED to indicate the SD init failed 
+    ErrorBlink(SDError);
+    return 1;
   }
   Serial.println("card initialized.");
   // create a new file
@@ -213,8 +238,12 @@ void SDsetup() {
   }
   if (! logfile) {
     Serial.println("couldnt create file");
+    // Blink the log LED to indicate file creation fail
+    ErrorBlink(FileError);
+    return 1;
   }
   Serial.print("Logging to: "); Serial.println(filename);
+  return 0;
 }
  
 void get_gps() {
@@ -249,4 +278,30 @@ void get_gps() {
 #endif
   //}
 }
+
+// Function to blink LEDs in an error pattern
+// Alternate the blinking of the log and read LEDs 
+void ErrorBlink(int Error)
+{
+  // Blink both LEDs to signal error
+  for(int i=0; i < 5; i++)
+  {
+    digitalWrite(logLED, HIGH);
+    digitalWrite(readLED, LOW);
+    delay(500);
+    digitalWrite(logLED, LOW);
+    digitalWrite(readLED, HIGH);
+    delay(500);
+  }
+
+  // Blink the log LED a set number of times (Error) to indicate the error
+  for(int i=0; i < Error; i++)
+  {
+    digitalWrite(logLED, HIGH);
+    delay(500);
+    digitalWrite(logLED, LOW);
+    delay(500);
+  }
+}
+
 
