@@ -14,7 +14,7 @@
  Run the fan from the +3.3V pin and GND on the Arduino.
  Connect the DHT22 sensor red/black wires to +5V/GND and the yellow wire to D8.
 */
-#define ECHO_TO_FILE 0
+#define ECHO_TO_FILE 1
 #define ECHO_TO_SERIAL 1
 #define SDError 3
 #define FileError 4
@@ -47,7 +47,7 @@ unsigned long starttime;
 unsigned long sampletime_ms = 5000; //sample 30 s
 unsigned long lowpulseoccupancy = 0;
 float ratio, concentration;
-int Status = 0;
+int SDStatus = 0;
  
 int increment;
 void setup() {
@@ -67,11 +67,11 @@ void setup() {
   pinMode(logLED, OUTPUT);
   starttime = millis();//get the current time;
 #if ECHO_TO_FILE
-  Status = SDsetup();
-  if (!Status)
+  SDStatus = SDsetup();
+  if (SDStatus)
   {
     // Long blink the LED to inidicate successful SD initialization
-    for(int i=0; i < 2; i++)
+    for(int i=0; i < 4; i++)
     {
       digitalWrite(logLED, HIGH);
       delay(1000);
@@ -128,9 +128,7 @@ void readPulses(int P) {
     }
   } while ( (millis() - starttime) < sampletime_ms) ;
   // Blink the read LED to indicate a pulse read
-  digitalWrite(readLED, HIGH);
-  delay(100);
-  digitalWrite(readLED, LOW);
+  LEDBlink(readLED);
  
 #if ECHO_TO_SERIAL
   Serial.print("D" + (String)(increment % num_detectors + 1) + "[" + (String)(increment / num_detectors + 1) + "]:, ");
@@ -155,6 +153,12 @@ void readPulses(int P) {
     logfile.print(n_pulses); logfile.print(", "); logfile.print(ratio, 2); logfile.print(", ");
     logfile.print((float)lowpulseoccupancy / n_pulses, 1); logfile.print(", ");
     logfile.print(min_duration); logfile.print(", "); logfile.print(max_duration); logfile.print(", ");
+    // Indicate writing to the file by flashing log LED if correct initialization occured
+    if(SDStatus)
+    {
+      LEDBlink(logLED);
+    }
+
 #endif
     get_gps();
 #if ECHO_TO_SERIAL
@@ -175,6 +179,10 @@ void readPulses(int P) {
 #if ECHO_TO_FILE
     WriteTime(lineFeed);
     logfile.print("0, 0, 0, 0, 0, ");
+    if(SDStatus)
+    {
+      LEDBlink(logLED);
+    }
  
 #endif
     get_gps();
@@ -211,7 +219,7 @@ void DisplayTime(boolean lineFeed) {
   else Serial.print(", ");
 }
 
-// Returns the startup status: 0 for success and 1 for failure
+// Returns the startup status: 1 for success and 0 for failure
 int SDsetup() {
   // initialize the SD card
   Serial.print("Initializing SD card...");
@@ -221,9 +229,9 @@ int SDsetup() {
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
-    // blink log LED to indicate the SD init failed 
+    // blink SD LED to indicate the SD init failed 
     ErrorBlink(SDError);
-    return 1;
+    return 0;
   }
   Serial.println("card initialized.");
   // create a new file
@@ -240,10 +248,10 @@ int SDsetup() {
     Serial.println("couldnt create file");
     // Blink the log LED to indicate file creation fail
     ErrorBlink(FileError);
-    return 1;
+    return 0;
   }
   Serial.print("Logging to: "); Serial.println(filename);
-  return 0;
+  return 1;
 }
  
 void get_gps() {
@@ -288,12 +296,13 @@ void ErrorBlink(int Error)
   {
     digitalWrite(logLED, HIGH);
     digitalWrite(readLED, LOW);
-    delay(500);
+    delay(250);
     digitalWrite(logLED, LOW);
     digitalWrite(readLED, HIGH);
-    delay(500);
+    delay(250);
   }
-
+  digitalWrite(readLED, LOW);
+  delay(1000);
   // Blink the log LED a set number of times (Error) to indicate the error
   for(int i=0; i < Error; i++)
   {
@@ -302,6 +311,13 @@ void ErrorBlink(int Error)
     digitalWrite(logLED, LOW);
     delay(500);
   }
+}
+
+void LEDBlink(int pin)
+{
+  digitalWrite(pin, HIGH);
+  delay(100);
+  digitalWrite(pin, LOW);
 }
 
 
