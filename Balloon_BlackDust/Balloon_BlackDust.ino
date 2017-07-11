@@ -39,8 +39,8 @@ const int D2[2] = {8, 9}; //specify input pins for detector 2 (P1, P2)
 //const int D4[2] = {12, 13}; //specify input pins for detector 2 (P1, P2)
 //const int Di[2] = [P1, P2] gives template for an i'th detector using pins P1 and P2
 int pin, n_pulses = 0;
-const int readLED = 4;
-const int logLED = 3;
+const int readLED = 3;
+const int logLED = 4;
 unsigned long duration, min_duration = 1000000, max_duration = 0;
 unsigned long starttime;
 // unsigned long waittime=500000; // microseconds to wait for pulse to complete before return from pulseIn()
@@ -58,7 +58,7 @@ void setup() {
   delay(1000);
   Serial1.println(PMTK_Q_RELEASE);
   Wire.begin(); rtc.begin();
-  rtc.adjust(DateTime(__DATE__, __TIME__));
+  
   pinMode(D1[0], INPUT); pinMode(D1[1], INPUT);
   pinMode(D2[0], INPUT); pinMode(D2[1], INPUT);
   //pinMode(D3[0], INPUT); pinMode(D3[1], INPUT);
