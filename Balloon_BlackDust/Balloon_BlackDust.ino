@@ -67,9 +67,7 @@ void setup() {
   pinMode(logLED, OUTPUT);
   starttime = millis();//get the current time;
 #if ECHO_TO_FILE
-  SDStatus = SDsetup();
-  if (SDStatus)
-  {
+ SDsetup();
     // Long blink the LED to inidicate successful SD initialization
     for(int i=0; i < 4; i++)
     {
@@ -78,7 +76,6 @@ void setup() {
       digitalWrite(logLED, LOW);
       delay(1000);
     }
-  }
   
   logfile.println("ch,Date,Time,pulse_occupancy,avg_duration,min_duration,max_duration, GPS_altitude, GPS_time");
   logfile.flush();
@@ -221,7 +218,7 @@ void DisplayTime(boolean lineFeed) {
 
 // Upon SD initialization failure this function enters into a loop until the SD initialization failure is corrected
 // The LEDs will continuously blink until corrected
-int SDsetup() {
+void SDsetup() {
   bool SDCheck = 0;
   // initialize the SD card
   Serial.println("Initializing SD card:");
