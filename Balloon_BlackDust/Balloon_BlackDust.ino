@@ -67,9 +67,7 @@ void setup() {
   pinMode(logLED, OUTPUT);
   starttime = millis();//get the current time;
 #if ECHO_TO_FILE
-  SDStatus = SDsetup();
-  if (SDStatus)
-  {
+ SDsetup();
     // Long blink the LED to inidicate successful SD initialization
     for(int i=0; i < 4; i++)
     {
@@ -78,7 +76,6 @@ void setup() {
       digitalWrite(logLED, LOW);
       delay(1000);
     }
-  }
   
   logfile.println("ch,Date,Time,pulse_occupancy,avg_duration,min_duration,max_duration, GPS_altitude, GPS_time");
   logfile.flush();
@@ -219,21 +216,27 @@ void DisplayTime(boolean lineFeed) {
   else Serial.print(", ");
 }
 
-// Returns the startup status: 1 for success and 0 for failure
-int SDsetup() {
+// Upon SD initialization failure this function enters into a loop until the SD initialization failure is corrected
+// The LEDs will continuously blink until corrected
+void SDsetup() {
+  bool SDCheck = 0;
   // initialize the SD card
-  Serial.print("Initializing SD card...");
-  // make sure that the default chip select pin is set to
-  // output, even if you don't use it:
-  pinMode(10, OUTPUT);
-  // see if the card is present and can be initialized:
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    // blink SD LED to indicate the SD init failed 
-    ErrorBlink(SDError);
-    return 0;
+  Serial.println("Initializing SD card:");
+  while(!SDCheck)
+  {
+    // make sure that the default chip select pin is set to
+    // output, even if you don't use it:
+    pinMode(10, OUTPUT);
+    // see if the card is present and can be initialized:
+    SDCheck = 1;
+    if (!SD.begin(chipSelect)) {
+      Serial.println("SD Card failed");
+      // blink SD LED to indicate the SD init failed 
+      ErrorBlink(SDError);
+      SDCheck = 0;
+    }
   }
-  Serial.println("card initialized.");
+  Serial.println("SD Card Initialized");
   // create a new file
   for (uint8_t i = 0; i < 100; i++) {
     filename[6] = i / 10 + '0';
@@ -245,10 +248,12 @@ int SDsetup() {
     }
   }
   if (! logfile) {
-    Serial.println("couldnt create file");
+    Serial.println("couldn't create file");
     // Blink the log LED to indicate file creation fail
-    ErrorBlink(FileError);
-    return 0;
+    while(1){
+      // Blink the LED to indicate the file could not be opned and action should be taken to fix before launch
+      ErrorBlink(FileError);
+    }
   }
   Serial.print("Logging to: "); Serial.println(filename);
   return 1;
@@ -296,10 +301,10 @@ void ErrorBlink(int Error)
   {
     digitalWrite(logLED, HIGH);
     digitalWrite(readLED, LOW);
-    delay(250);
+    delay(200);
     digitalWrite(logLED, LOW);
     digitalWrite(readLED, HIGH);
-    delay(250);
+    delay(200);
   }
   digitalWrite(readLED, LOW);
   delay(1000);
