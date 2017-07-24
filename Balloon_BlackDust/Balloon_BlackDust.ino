@@ -32,11 +32,11 @@ RTC_DS1307 rtc;
 File logfile;
 char filename[] = "LOGBLK00.CSV";
 const int  chipSelect = 53, lineFeed = 0;
-const int num_detectors = 2; //specifiy number of particle detectors being used
+const int num_detectors = 4; //specifiy number of particle detectors being used
 const int D1[2] = {7, 6}; //specify input pins for detector 1 (P1, P2)
 const int D2[2] = {8, 9}; //specify input pins for detector 2 (P1, P2)
-//const int D3[2] = {12, 13}; //specify input pins for detector 2 (P1, P2)
-//const int D4[2] = {12, 13}; //specify input pins for detector 2 (P1, P2)
+const int D3[2] = {12, 13}; //specify input pins for detector 3 (P1, P2)
+const int D4[2] = {12, 13}; //specify input pins for detector 4 (P1, P2)
 //const int Di[2] = [P1, P2] gives template for an i'th detector using pins P1 and P2
 int pin, n_pulses = 0;
 const int readLED = 3;
