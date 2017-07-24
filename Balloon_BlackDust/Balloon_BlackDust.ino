@@ -61,8 +61,8 @@ void setup() {
   
   pinMode(D1[0], INPUT); pinMode(D1[1], INPUT);
   pinMode(D2[0], INPUT); pinMode(D2[1], INPUT);
-  //pinMode(D3[0], INPUT); pinMode(D3[1], INPUT);
-  //pinMode(D4[0], INPUT); pinMode(D4[1], INPUT);
+  pinMode(D3[0], INPUT); pinMode(D3[1], INPUT);
+  pinMode(D4[0], INPUT); pinMode(D4[1], INPUT);
   pinMode(readLED, OUTPUT);
   pinMode(logLED, OUTPUT);
   starttime = millis();//get the current time;
@@ -91,10 +91,10 @@ void loop() {
   increment ++;
   readPulses(D2[0]);
   increment ++;
-  //readPulses(D3[0]);
-  //increment ++;
-  //readPulses(D4[0]);
-  //increment ++;
+  readPulses(D3[0]);
+  increment ++;
+  readPulses(D4[0]);
+  increment ++;
   //insert the following code for i'th detector here:
   //readPulses(Di[0];
   //increment ++;
@@ -103,10 +103,10 @@ void loop() {
   increment ++;
   readPulses(D2[1]);
   increment ++;
-  //readPulses(D3[1]);
-  //increment ++;
-  //readPulses(D4[1]);
-  //increment ++;
+  readPulses(D3[1]);
+  increment ++;
+  readPulses(D4[1]);
+  increment ++;
   //insert the following code for i'th detector here:
   //readPulses(Di[1];
   //increment ++;
