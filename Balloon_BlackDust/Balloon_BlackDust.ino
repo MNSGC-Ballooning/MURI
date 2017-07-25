@@ -151,10 +151,7 @@ void readPulses(int P) {
     logfile.print((float)lowpulseoccupancy / n_pulses, 1); logfile.print(", ");
     logfile.print(min_duration); logfile.print(", "); logfile.print(max_duration); logfile.print(", ");
     // Indicate writing to the file by flashing log LED if correct initialization occured
-    if(SDStatus)
-    {
-      LEDBlink(logLED);
-    }
+    LEDBlink(logLED);
 
 #endif
     get_gps();
@@ -176,10 +173,7 @@ void readPulses(int P) {
 #if ECHO_TO_FILE
     WriteTime(lineFeed);
     logfile.print("0, 0, 0, 0, 0, ");
-    if(SDStatus)
-    {
-      LEDBlink(logLED);
-    }
+    LEDBlink(logLED);
  
 #endif
     get_gps();
