@@ -318,12 +318,5 @@ void LEDBlink(int pin)
   delay(100);
   digitalWrite(pin, LOW);
 }
-void logD(String toLog){
-  logfile = SD.open(filename, FILE_WRITE);
-  digitalWrite(logLED, HIGH);
-  logfile.println(toLog);
-  logfile.close();
-  digitalWrite(logLED, LOW);
-}
 
 
