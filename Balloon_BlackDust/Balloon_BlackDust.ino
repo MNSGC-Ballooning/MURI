@@ -72,8 +72,10 @@ void setup() {
     for(int i=0; i < 4; i++)
     {
       digitalWrite(logLED, HIGH);
+      digitalWrite(readLED, HIGH);
       delay(1000);
       digitalWrite(logLED, LOW);
+      digitalWrite(readLED, LOW);
       delay(1000);
     }
   
