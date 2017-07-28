@@ -115,7 +115,7 @@ void loop() {
 }
 
 void readPulses(int P) {
- 
+  String toPrint = "";
   pin = P;
   do {
     duration = pulseIn(pin, LOW); // pulseIn() returns pulse length, microseconds
@@ -133,7 +133,7 @@ void readPulses(int P) {
   Serial.print("D" + (String)(increment % num_detectors + 1) + "[" + (String)(increment / num_detectors + 1) + "]:, ");
 #endif
 #if ECHO_TO_FILE
-  logfile.print("D" + (String)(increment % num_detectors + 1) + "[" + (String)(increment / num_detectors + 1) + "]:, ");
+  toPrint +=("D" + (String)(increment % num_detectors + 1) + "[" + (String)(increment / num_detectors + 1) + "]:, ");
 #endif
  
   if (n_pulses > 0) {
@@ -149,20 +149,15 @@ void readPulses(int P) {
 #endif
 #if ECHO_TO_FILE
     WriteTime(lineFeed);
-    logfile.print(n_pulses); logfile.print(", "); logfile.print(ratio, 2); logfile.print(", ");
-    logfile.print((float)lowpulseoccupancy / n_pulses, 1); logfile.print(", ");
-    logfile.print(min_duration); logfile.print(", "); logfile.print(max_duration); logfile.print(", ");
+    toPrint+=(n_pulses); toPrint+=(", "); toPrint+=(ratio, 2); toPrint+=(", ");
+    toPrint+=((float)lowpulseoccupancy / n_pulses, 1); toPrint+=(", ");
+    toPrint+=(min_duration); toPrint+=(", "); toPrint+=(max_duration); toPrint+=(", ");
     // Indicate writing to the file by flashing log LED if correct initialization occured
-    LEDBlink(logLED);
 
 #endif
-    get_gps();
+    //get_gps();
 #if ECHO_TO_SERIAL
     Serial.println();
-#endif
-#if ECHO_TO_FILE
-    logfile.println();
-    logfile.flush();
 #endif
     n_pulses = 0;
   }
@@ -173,20 +168,20 @@ void readPulses(int P) {
  
 #endif
 #if ECHO_TO_FILE
-    WriteTime(lineFeed);
-    logfile.print("0, 0, 0, 0, 0, ");
-    LEDBlink(logLED);
+    //WriteTime(lineFeed);
+    toPrint+=("0, 0, 0, 0, 0, ");
  
 #endif
-    get_gps();
+    //get_gps();
 #if ECHO_TO_SERIAL
     Serial.println();
 #endif
 #if ECHO_TO_FILE
-    logfile.println();
-    logfile.flush();
+    //logfile.println();
+    //logfile.flush();
 #endif
   }
+  logSense(toPrint);
   min_duration = 1000000; max_duration = 0; lowpulseoccupancy = 0;
 }
 void WriteTime(boolean lineFeed) { // to SD card file buffer
@@ -240,7 +235,6 @@ void SDsetup() {
     if (! SD.exists(filename)) {
       // only open a new file if it doesn't exist
       logfile = SD.open(filename, FILE_WRITE);
-      logfile.close();
       break;  // leave the loop!
     }
   }
@@ -250,11 +244,10 @@ void SDsetup() {
   if (! SD.exists(gpsName)) {
     // only open a new file if it doesn't exist
     GPSlog = SD.open(gpsName, FILE_WRITE);
-    GPSlog.close();
     break;  // leave the loop!
   }
   }
-  if (! logfile) {
+  if (!logfile || !GPSlog) {
     Serial.println("couldn't create file");
     // Blink the log LED to indicate file creation fail
     while(1){
@@ -262,8 +255,10 @@ void SDsetup() {
       ErrorBlink(FileError);
     }
   }
+  logfile.close();
+  GPSlog.close();
   Serial.print("Logging to: "); Serial.println(filename);
-  Serial.print("loggin GPS to: "); Serial.println(gpsName);
+  Serial.print("logging GPS to: "); Serial.println(gpsName);
 }
  
 void get_gps() {
@@ -339,10 +334,26 @@ void logGPS(String toLog){
   digitalWrite(logLED, LOW);
 }
 void logSense(String toLog){
+  String toPrint = flightTimeStr() + ": " + toLog;
   logfile = SD.open(filename, FILE_WRITE);
   digitalWrite(logLED, HIGH);
-  GPSlog.println(toLog);
-  GPSlog.close();
+  logfile.println(toPrint);
+  logfile.close();
   digitalWrite(logLED, LOW);
 }
+
+String flightTimeStr(){
+  unsigned long t = millis() / 1000;
+  String fTime = "";
+  fTime += (String(t / 3600) + ":");
+  t %= 3600;
+  fTime += String(t / 600);
+  t %= 600;
+  fTime += (String(t / 60) + ":");
+  t %= 60;
+  fTime += (String(t / 10) + String(t % 10));
+  return fTime;
+}
+  
+
 
