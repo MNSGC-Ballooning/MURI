@@ -263,6 +263,7 @@ void SDsetup() {
     }
   }
   Serial.print("Logging to: "); Serial.println(filename);
+  Serial.print("loggin GPS to: "); Serial.println(gpsName);
 }
  
 void get_gps() {
