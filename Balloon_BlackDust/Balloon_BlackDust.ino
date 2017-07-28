@@ -19,18 +19,18 @@
 #define SDError 3
 #define FileError 4
 #include <Wire.h>
-#include "RTClib.h"
 #include <SoftwareSerial.h>
  
 #include <Adafruit_GPS.h>
 Adafruit_GPS GPS(&Serial1);
 //uint32_t timer = millis();                  //GPS timer
  
-RTC_DS1307 rtc;
 #include <SPI.h>
 #include <SD.h>
 File logfile;
+File GPSlog;
 char filename[] = "LOGBLK00.CSV";
+char gpsName[] = "GPSLOG00.CSV";
 const int  chipSelect = 53, lineFeed = 0;
 const int num_detectors = 4; //specifiy number of particle detectors being used
 const int D1[2] = {7, 6}; //specify input pins for detector 1 (P1, P2)
@@ -57,7 +57,7 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   delay(1000);
   Serial1.println(PMTK_Q_RELEASE);
-  Wire.begin(); rtc.begin();
+  Wire.begin();
   
   pinMode(D1[0], INPUT); pinMode(D1[1], INPUT);
   pinMode(D2[0], INPUT); pinMode(D2[1], INPUT);
@@ -190,24 +190,24 @@ void readPulses(int P) {
   min_duration = 1000000; max_duration = 0; lowpulseoccupancy = 0;
 }
 void WriteTime(boolean lineFeed) { // to SD card file buffer
-  DateTime now = rtc.now();
-  logfile.print(now.year());   logfile.print('/');
+  //DateTime now = rtc.now();
+/*  logfile.print(now.year());   logfile.print('/');
   logfile.print(now.month());  logfile.print('/');
   logfile.print(now.day());    logfile.print(',');
   logfile.print(now.hour());   logfile.print(':');
   logfile.print(now.minute()); logfile.print(':');
   logfile.print(now.second()); logfile.print(", ");
   if (lineFeed) logfile.println();
-  else logfile.print(", ");
+  else logfile.print(", ");*/
 }
 void DisplayTime(boolean lineFeed) {
-  DateTime now = rtc.now();
-  Serial.print(now.year());   Serial.print('/');
+  //DateTime now = rtc.now();
+  /*Serial.print(now.year());   Serial.print('/');
   Serial.print(now.month());  Serial.print('/');
   Serial.print(now.day());    Serial.print(',');
   Serial.print(now.hour());   Serial.print(':');
   Serial.print(now.minute()); Serial.print(':');
-  Serial.print(now.second()); Serial.print(", ");
+  Serial.print(now.second()); Serial.print(", ");*/
   if (lineFeed) Serial.println();
   else Serial.print(", ");
 }
@@ -240,8 +240,19 @@ void SDsetup() {
     if (! SD.exists(filename)) {
       // only open a new file if it doesn't exist
       logfile = SD.open(filename, FILE_WRITE);
+      logfile.close();
       break;  // leave the loop!
     }
+  }
+  for (uint8_t i = 0; i < 100; i++) {
+  gpsName[6] = i / 10 + '0';
+  gpsName[7] = i % 10 + '0';
+  if (! SD.exists(gpsName)) {
+    // only open a new file if it doesn't exist
+    GPSlog = SD.open(gpsName, FILE_WRITE);
+    GPSlog.close();
+    break;  // leave the loop!
+  }
   }
   if (! logfile) {
     Serial.println("couldn't create file");
@@ -319,5 +330,18 @@ void LEDBlink(int pin)
   delay(100);
   digitalWrite(pin, LOW);
 }
-
+void logGPS(String toLog){
+  GPSlog = SD.open(gpsName, FILE_WRITE);
+  digitalWrite(logLED, HIGH);
+  GPSlog.println(toLog);
+  GPSlog.close();
+  digitalWrite(logLED, LOW);
+}
+void logSense(String toLog){
+  logfile = SD.open(filename, FILE_WRITE);
+  digitalWrite(logLED, HIGH);
+  GPSlog.println(toLog);
+  GPSlog.close();
+  digitalWrite(logLED, LOW);
+}
 
