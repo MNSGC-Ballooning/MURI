@@ -79,14 +79,14 @@ void setup() {
       delay(1000);
     }
   
-  logfile.println("ch,Date,Time,pulse_occupancy,avg_duration,min_duration,max_duration, GPS_altitude, GPS_time");
-  logfile.flush();
+  logSense("flightTime,#_pulses,pulse_occupancy,avg_duration,min_duration,max_duration,");
 #endif
 #if ECHO_TO_SERIAL
   Serial.println("ch,Date,Time,#_pulses,pulse_occupancy,avg_duration,min_duration,max_duration, GPS_altitude, GPS_time");
 #endif
 }
 void loop() {
+  starttime = millis();
   increment = 0;
   starttime = millis();
   readPulses(D1[0]);
@@ -127,7 +127,7 @@ void readPulses(int P) {
     }
   } while ( (millis() - starttime) < sampletime_ms) ;
   // Blink the read LED to indicate a pulse read
-  LEDBlink(readLED);
+
  
 #if ECHO_TO_SERIAL
   Serial.print("D" + (String)(increment % num_detectors + 1) + "[" + (String)(increment / num_detectors + 1) + "]:, ");
@@ -140,7 +140,6 @@ void readPulses(int P) {
     ratio = 0.1 * lowpulseoccupancy / sampletime_ms; // pulse occupancy percentage 0<=100
  
 #if ECHO_TO_SERIAL
-    DisplayTime(lineFeed);
     Serial.print(n_pulses); Serial.print(", "); Serial.print(ratio, 2); Serial.print(", ");
     Serial.print((float)lowpulseoccupancy / n_pulses, 1); Serial.print(", ");
     Serial.print(min_duration); Serial.print(", ");  Serial.print(max_duration); Serial.print(", ");
@@ -183,6 +182,7 @@ void readPulses(int P) {
   }
   logSense(toPrint);
   min_duration = 1000000; max_duration = 0; lowpulseoccupancy = 0;
+  
 }
 void WriteTime(boolean lineFeed) { // to SD card file buffer
   //DateTime now = rtc.now();
