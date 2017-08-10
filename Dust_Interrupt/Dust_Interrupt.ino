@@ -1,3 +1,4 @@
+#include <BlackDust.h>
 /*
  Simon Peterson, August 2017
  Writing code to use the Telaire Smart Dust Sensor using interrupts to allow for multiple
@@ -10,7 +11,6 @@
  */
 #include <SPI.h>
 #include <SD.h>
-#include <BlackDust.h>
 const int D1[2] = {7, 6}; //specify input pins for detector 1 (P1, P2)
 
 
