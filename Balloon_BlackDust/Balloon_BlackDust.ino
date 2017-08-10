@@ -120,6 +120,7 @@ void readPulses(int P) {
   do {
     duration = pulseIn(pin, LOW); // pulseIn() returns pulse length, microseconds
     if (duration > 0) {
+      Serial.println("Reading pin :" + String(pin));
       n_pulses++;
       if (duration < min_duration) min_duration = duration;
       if (duration > max_duration) max_duration = duration;
