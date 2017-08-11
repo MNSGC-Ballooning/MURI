@@ -11,15 +11,25 @@
  */
 #include <SPI.h>
 #include <SD.h>
+//declare {low,high} pins for the dustsensors
 dSen Sensors[2] = {{7,8},{9,10}};
+volatile byte state1;
+volatile byte state2;
+
+
 
 
 void setup() {
-  // put your setup code here, to run once:
-  
+  pinMode(Sensors[0].getLow(), INPUT);
+  pinMode(Sensors[1].getLow(), INPUT);
+  attachInterrupt(digitalPinToInterrupt(Sensors[0].getLow()), readSen, CHANGE);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
 }
+void readSen(){
+}
+
+
