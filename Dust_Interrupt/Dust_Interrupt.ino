@@ -11,7 +11,7 @@
  */
 #include <SPI.h>
 #include <SD.h>
-const int D1[2] = {7, 6}; //specify input pins for detector 1 (P1, P2)
+dSen Sensors[2] = {{7,8},{9,10}};
 
 
 void setup() {
