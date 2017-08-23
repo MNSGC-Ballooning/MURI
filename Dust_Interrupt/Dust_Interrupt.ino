@@ -12,9 +12,12 @@
 #include <SPI.h>
 #include <SD.h>
 //declare {low,high} pins for the dustsensors
-dSen Sensors[2] = {{7,8},{9,10}};
+dSen Sensors[2] = {{20,21},{9,10}};
+//the Low and High states of the dust sensor
 volatile byte state1;
 volatile byte state2;
+//pulse occupancy variables
+bool set = false;
 
 
 
@@ -22,14 +25,40 @@ volatile byte state2;
 void setup() {
   pinMode(Sensors[0].getLow(), INPUT);
   pinMode(Sensors[1].getLow(), INPUT);
-  attachInterrupt(digitalPinToInterrupt(Sensors[0].getLow()), readSen, CHANGE);
+  for(int i = 0; i<2;i++){
+    attachInterrupt(digitalPinToInterrupt(Sensors[i].getLow()), readSen, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(Sensors[i].getHigh()), readSen, CHANGE);
+  }
+
+
+
+  Serial.begin(9600);
+  
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+for(int i = 0; i<2; i++){
+  if(Sensors[i].changed){
+    Sensors[i].changed = false;
+    Serial.println("we are changing!");
+  }
+}
 }
 void readSen(){
+for(int i = 0; i < 2; i++){
+  Sensors[i].setLowState(digitalRead(Sensors[i].getLow()));
+  Sensors[i].setHighState(digitalRead(Sensors[i].getHigh()));
+  if(Sensors[i].getLowState()!=Sensors[i].getPrevLow())
+  {
+    Sensors[i].changed = true;
+    break;
+  }
+  if(Sensors[i].getHighState()!=Sensors[i].getPrevHigh()){
+    Sensors[i].changed = true;
+    break;
+  }
+}
+  
 }
 
 
