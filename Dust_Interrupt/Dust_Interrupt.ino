@@ -17,7 +17,8 @@ dSen Sensors[2] = {{20,21},{9,10}};
 //pulse occupancy variables
 bool set = false;
 volatile bool change = false;
-
+unsigned long sample = 30000;
+unsigned long sampleTimer = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -41,6 +42,12 @@ void loop() {
       Sensors[i].update();
     }
     change = false;
+  }
+  if(millis()-sampleTimer >sample){
+    for(int i =0; i<2; i++){
+      Serial.println(Sensors[i].reset());
+    }
+    sampleTimer = millis();
   }
 }
 void readSen(){

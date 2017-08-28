@@ -1,4 +1,4 @@
-/*
+cd /*
  D. Brooks, December 2015
  Interface to Telaire SMART Dust Sensor SM-PWM-01A (see Mouser Electronics 527-SM-PWM-01A)
  See http://www.amphenol-sensors.com/en/products/co2/co2-modules/3222-telaire-smart-dust-sensor#download
@@ -33,8 +33,8 @@ File logfile;
 char filename[] = "LOGBLK00.CSV";
 const int  chipSelect = 53, lineFeed = 0;
 const int num_detectors = 2; //specifiy number of particle detectors being used
-const int D1[2] = {7, 6}; //specify input pins for detector 1 (P1, P2)
-const int D2[2] = {8, 9}; //specify input pins for detector 2 (P1, P2)
+const int D1[2] = {9, 10}; //specify input pins for detector 1 (P1, P2)
+const int D2[2] = {20, 21}; //specify input pins for detector 2 (P1, P2)
 //const int D3[2] = {12, 13}; //specify input pins for detector 2 (P1, P2)
 //const int D4[2] = {12, 13}; //specify input pins for detector 2 (P1, P2)
 //const int Di[2] = [P1, P2] gives template for an i'th detector using pins P1 and P2
@@ -229,12 +229,12 @@ void SDsetup() {
     pinMode(10, OUTPUT);
     // see if the card is present and can be initialized:
     SDCheck = 1;
-    if (!SD.begin(chipSelect)) {
+    /*if (!SD.begin(chipSelect)) {
       Serial.println("SD Card failed");
       // blink SD LED to indicate the SD init failed 
       ErrorBlink(SDError);
       SDCheck = 0;
-    }
+    }*/
   }
   Serial.println("SD Card Initialized");
   // create a new file
@@ -247,7 +247,7 @@ void SDsetup() {
       break;  // leave the loop!
     }
   }
-  if (! logfile) {
+  /*if (! logfile) {
     Serial.println("couldn't create file");
     // Blink the log LED to indicate file creation fail
     while(1){
@@ -255,7 +255,7 @@ void SDsetup() {
       ErrorBlink(FileError);
     }
   }
-  Serial.print("Logging to: "); Serial.println(filename);
+  Serial.print("Logging to: "); Serial.println(filename);*/
   return 1;
 }
  
