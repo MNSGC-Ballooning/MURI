@@ -1,3 +1,4 @@
+#include <RTClib.h>   
 #include <BlackDust.h>
 /*
  Simon Peterson, August 2017
@@ -10,19 +11,53 @@
  pin 5 no connection
  */
 #include <SPI.h>
-#include <SD.h>
-//declare {low,high} pins for the dustsensors
+#include <SD.h>    // a modified library can be found at http://adafru.it/aP6 for the SD card for the mega
+//declare {low,high} pins for the dustsensors. 3 is the max for interrupts.
 dSen Sensors[2] = {{20,21},{9,10}};
+RTC_DS1307 rtc;
 //the Low and High states of the dust sensor
 //pulse occupancy variables
 bool set = false;
 volatile bool change = false;
-unsigned long sample = 30000;
+#define SAMPLE 30000
+#define GPS_SAMPLE 1000
+unsigned long GPStimer = 0;
 unsigned long sampleTimer = 0;
-
+char GPSfilename[] = "GPSlog00.csv";
+char logfilename[] = "dLog00.csv";
+File logFile;
+File GPSlog;
 void setup() {
+  rtc.begin();
   Serial.begin(9600);
-  
+  while(!SD.begin(10,11,12,13)){       
+    Serial.println("no SD card biotch!");
+  }
+  Serial.println("SD card initialized");
+  for(uint8_t i = 0; i<100; i++){
+    GPSfilename[6] = i/10 + '0';
+    GPSfilename[7] = i%10 + '0';
+    if(!SD.exists(GPSfilename)){
+      GPSlog = SD.open(GPSfilename, FILE_WRITE);
+      break;
+    }
+  }
+  Serial.println("GPS log created: " + String(GPSfilename));
+  for(uint8_t i = 0; i<100; i++){
+    logfilename[4] = i/10 + '0';
+    logfilename[5] = i%10 + '0';
+    if(!SD.exists(logfilename)){
+      logFile = SD.open(logfilename, FILE_WRITE);
+      break;
+    }
+  }
+  Serial.println("Log file initialized: " + String(logfilename));
+  logFile.println("sensor, pin, Date, Time, # of pulses, pulse occupancy, average duration, min duration");
+  Serial.println("file header added");
+  GPSlog.println("Date, Time, altitude (feet), latitude, longitude");
+  logFile.close();
+  GPSlog.close();
+  Serial.println("GPS header added");                     
   for(int i = 0; i<2;i++){
     pinMode(Sensors[i].getLow(), INPUT);
     pinMode(Sensors[i].getHigh(), INPUT);
@@ -37,15 +72,21 @@ void setup() {
 }
 
 void loop() {
+  if(millis()-GPStimer>GPS_SAMPLE){
+    GPSlog = SD.open(GPSfilename);
+    //gps data will go here
+    //wee!
+    GPSlog.close();
+  }
   if(change){
     for(int i =0;i<2;i++){
       Sensors[i].update();
     }
     change = false;
   }
-  if(millis()-sampleTimer >sample){
-    for(int i =0; i<2; i++){
-      Serial.println(Sensors[i].reset());
+  if(millis()-sampleTimer >SAMPLE){
+    for(uint8_t i =0; i<2; i++){
+      Serial.println(Sensors[i].reset(i));
     }
     sampleTimer = millis();
   }
