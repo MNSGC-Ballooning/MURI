@@ -1,3 +1,4 @@
+#include <Adafruit_GPS.h>
 #include <RTClib.h>   
 #include <BlackDust.h>
 /*
@@ -27,7 +28,13 @@ char GPSfilename[] = "GPSlog00.csv";
 char logfilename[] = "dLog00.csv";
 File logFile;
 File GPSlog;
+SoftwareSerial GPSserial(18,19);  //are these the right pins??? maybe??
+Adafruit_GPS GPS(&GPSserial);
 void setup() {
+  GPS.begin(9600);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  
   rtc.begin();
   Serial.begin(9600);
   while(!SD.begin(10,11,12,13)){       
