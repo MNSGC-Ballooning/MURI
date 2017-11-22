@@ -18,6 +18,7 @@ dSen Sensors[2] = {{20,21},{9,10}};
 RTC_DS1307 rtc;
 //the Low and High states of the dust sensor
 //pulse occupancy variables
+String printer = "";
 bool set = false;
 volatile bool change = false;
 #define SAMPLE 30000
@@ -37,8 +38,10 @@ void setup() {
   
   rtc.begin();
   Serial.begin(9600);
-  while(!SD.begin(10,11,12,13)){       
+  pinMode(53, OUTPUT);
+  while(!SD.begin(4)){       
     Serial.println("no SD card biotch!");
+    delay(300);
   }
   Serial.println("SD card initialized");
   for(uint8_t i = 0; i<100; i++){
@@ -59,7 +62,8 @@ void setup() {
     }
   }
   Serial.println("Log file initialized: " + String(logfilename));
-  logFile.println("sensor, pin, Date, Time, # of pulses, pulse occupancy, average duration, min duration");
+  logFile.println("sep=,");    //for some reason this needs to be added?
+  logFile.println("sensor, pin, pulses, LPO, avg pulse length, minduration, maxduration");
   Serial.println("file header added");
   GPSlog.println("Date, Time, altitude (feet), latitude, longitude");
   logFile.close();
@@ -93,7 +97,11 @@ void loop() {
   }
   if(millis()-sampleTimer >SAMPLE){
     for(uint8_t i =0; i<2; i++){
-      Serial.println(Sensors[i].reset(i));
+      printer =(Sensors[i].reset(i));
+      Serial.println(printer);
+      logFile = SD.open(logfilename, FILE_WRITE);
+      logFile.println(printer);
+      logFile.close();
     }
     sampleTimer = millis();
   }
