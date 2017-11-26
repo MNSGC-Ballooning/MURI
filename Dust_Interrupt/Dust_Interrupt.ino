@@ -29,9 +29,9 @@ char GPSfilename[] = "GPSlog00.csv";
 char logfilename[] = "dLog00.csv";
 File logFile;
 File GPSlog;
-SoftwareSerial GPSserial(18,19);  //are these the right pins??? maybe??
-Adafruit_GPS GPS(&GPSserial);
+Adafruit_GPS GPS(&Serial1);
 void setup() {
+  pinMode(13, OUTPUT);
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
@@ -42,6 +42,7 @@ void setup() {
   while(!SD.begin(4)){       
     Serial.println("no SD card biotch!");
     delay(300);
+    digitalWrite(13, HIGH);
   }
   Serial.println("SD card initialized");
   for(uint8_t i = 0; i<100; i++){
@@ -52,6 +53,7 @@ void setup() {
       break;
     }
   }
+  digitalWrite(13, HIGH);
   Serial.println("GPS log created: " + String(GPSfilename));
   for(uint8_t i = 0; i<100; i++){
     logfilename[4] = i/10 + '0';
@@ -63,9 +65,10 @@ void setup() {
   }
   Serial.println("Log file initialized: " + String(logfilename));
   logFile.println("sep=,");    //for some reason this needs to be added?
-  logFile.println("sensor, pin, pulses, LPO, avg pulse length, minduration, maxduration");
+  logFile.println("sensor, pin, pulses, LPO, avg pulse length, minduration, maxduration, glighttime, altitude,gpstime ");
   Serial.println("file header added");
-  GPSlog.println("Date, Time, altitude (feet), latitude, longitude");
+  GPSlog.println("sep=,");
+  GPSlog.println("Flight Time, Lat, Long, Altitude (ft), Date, Hour:Min:Sec");
   logFile.close();
   GPSlog.close();
   Serial.println("GPS header added");                     
@@ -75,19 +78,32 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(Sensors[i].getLow()), readSen, CHANGE);
     attachInterrupt(digitalPinToInterrupt(Sensors[i].getHigh()), readSen, CHANGE);
   }
-
-
+digitalWrite(13, LOW);
 
   
   
 }
 
 void loop() {
+  while(Serial1.available()>0){
+    GPS.read();
+  }
+  if(GPS.newNMEAreceived()){
+    GPS.parse(GPS.lastNMEA());
+  }
   if(millis()-GPStimer>GPS_SAMPLE){
-    GPSlog = SD.open(GPSfilename);
+    GPSlog = SD.open(GPSfilename, FILE_WRITE);
+    String data = "";
+    data += (flightTimeStr() + "," + String(GPS.latitudeDegrees, 6) + "," + String(GPS.longitudeDegrees, 6) + ",");
+      data += (String(GPS.altitude * 3.28048) + ",");    //convert meters to feet for datalogging
+      data += (String(GPS.month) + "/" + String(GPS.day) + "/" + String(GPS.year) + ",");
+      data += (String(GPS.hour) + ":" + String(GPS.minute) + ":" + String(GPS.seconds));
     //gps data will go here
     //wee!
+    Serial.println(data);
+    GPSlog.println(data);
     GPSlog.close();
+    GPStimer = millis();
   }
   if(change){
     for(int i =0;i<2;i++){
@@ -98,6 +114,12 @@ void loop() {
   if(millis()-sampleTimer >SAMPLE){
     for(uint8_t i =0; i<2; i++){
       printer =(Sensors[i].reset(i));
+      printer += ",";
+      printer += String(GPS.altitude * 3.28048);
+      printer += ",";
+      printer += flightTimeStr();
+      printer += ",";
+      printer += (String(GPS.hour) + ":" + String(GPS.minute) + ":" + String(GPS.seconds));
       Serial.println(printer);
       logFile = SD.open(logfilename, FILE_WRITE);
       logFile.println(printer);
@@ -111,5 +133,17 @@ void readSen(){
     Sensors[i].checkStatus();
     change = true;
   }
+}
+String flightTimeStr() {
+  unsigned long t = millis() / 1000;
+  String fTime = "";
+  fTime += (String(t / 3600) + ":");
+  t %= 3600;
+  fTime += String(t / 600);
+  t %= 600;
+  fTime += (String(t / 60) + ":");
+  t %= 60;
+  fTime += (String(t / 10) + String(t % 10));
+  return fTime;
 }
 
