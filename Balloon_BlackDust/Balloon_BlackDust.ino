@@ -1,3 +1,4 @@
+
 /*
  D. Brooks, December 2015
  Interface to Telaire SMART Dust Sensor SM-PWM-01A (see Mouser Electronics 527-SM-PWM-01A)
@@ -324,5 +325,6 @@ void LEDBlink(int pin)
   delay(100);
   digitalWrite(pin, LOW);
 }
+
 
 
